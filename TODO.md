@@ -1,5 +1,17 @@
 # TODOs
 
+- make join sep configurable
+- helper func for ToString() on array
+- rename ToString
+
+- OSPF: remove dummy OSPF.ncap file
+- replace all strings.Join... with join util func
+- performance: pre allocate array sizes and use indices
+
+- gopacket TLS type
+- log encoding errors for merged packets
+- fix GRE Routing
+
 Linux cross compilation:
 - CC=x86_64-pc-linux-gcc GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o nc-linux -i github.com/dreadl0ck/netcap/cmd
 - GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o nc-linux -ldflags="-L /usr/local/opt/libpcap/lib" -i github.com/dreadl0ck/netcap/cmd
@@ -18,15 +30,14 @@ Benchmarks:
 
 ## new protos
 
+- NortelDiscovery
 - MLDv2MulticastListenerReport
-- CiscoDiscoveryInfo
-- CDPHello
-- CDPEnergyWise
 - ASExternalLSA
-- LSA
 
 ## update documentation
 
+- LSA
+- CiscoDiscoveryInfo
 - EAPOL + Key
 - VRRPv2
 - EAP

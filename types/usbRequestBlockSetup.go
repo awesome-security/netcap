@@ -11,24 +11,30 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package collector
+package types
 
-import (
-	"github.com/dreadl0ck/netcap/encoder"
-	"github.com/google/gopacket"
-)
+func (a USBRequestBlockSetup) CSVHeader() []string {
+	return filter([]string{
+		"Timestamp",
+		"RequestType", // int32
+		"Request",     // int32
+		"Value",       // int32
+		"Index",       // int32
+		"Length",      // int32
+	})
+}
 
-// Config contains configuration parameters
-// for the Collector instance.
-type Config struct {
-	Live                bool
-	WriteUnknownPackets bool
-	Workers             int
-	NumWorkers          int
-	PacketBufferSize    int
-	SnapLen             int
-	Promisc             bool
-	EncoderConfig       encoder.Config
-	BaseLayer           gopacket.LayerType
-	DecodeOptions       gopacket.DecodeOptions
+func (a USBRequestBlockSetup) CSVRecord() []string {
+	return filter([]string{
+		formatTimestamp(a.Timestamp),
+		formatInt32(a.RequestType), // int32
+		formatInt32(a.Request),     // int32
+		formatInt32(a.Value),       // int32
+		formatInt32(a.Index),       // int32
+		formatInt32(a.Length),      // int32
+	})
+}
+
+func (a USBRequestBlockSetup) NetcapTimestamp() string {
+	return a.Timestamp
 }

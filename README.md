@@ -1,5 +1,5 @@
 <a href="https://github.com/dreadl0ck/netcap">
-  <img src="graphics/svg/Netcap-Logo.svg" width="100%" height="144">
+  <img src="graphics/svg/Netcap-Logo.svg" width="100%" height="300">
 </a>
 
 <br>
@@ -38,6 +38,7 @@ It has a concurrent design that makes use of multi-core architectures.
 The name *Netcap* was chosen to be simple and descriptive.
 The command-line tool was designed with usability and readability in mind,
 and displays progress when processing packets.
+The latest version offers 58 audit record types of which 53 are protocol specific and 5 are flow models.
 
 This readme serves as a quick overview - for more details please read the thesis.
 
@@ -199,75 +200,7 @@ To execute the unit tests, run the following from the project root:
 
     go test -v -bench=. ./...
 
-## Supported Protocols
-
-| Name                        | Layer       | Description                |
-| --------------------------- | ----------- | -------------------------- |
-| Ethernet                    | Link        | IEEE 802.3 Ethernet Protocol               |
-| ARP                         | Link        | Address Resolution Protocol               |
-| Dot1Q                       | Link        | IEEE 802.1Q, virtual LANs on an Ethernet network               |
-| Dot11                       | Link        | IEEE 802.11 Wireless LAN               |
-| LinkLayerDiscovery          | Link        | IEEE 802.1AB Station and Media Access Control Connectivity Discovery               |
-| EthernetCTP                 | Link        | diagnostic protocol included in the Xerox Ethernet II specification               |
-| EthernetCTPReply            | Link        | reply to an ethernet ctp packet               |
-| LinkLayerDiscoveryInfo      | Link        | decoded details for a set of LinkLayerDiscoveryValues               |
-| LLC                         | Link        | IEEE 802.2 LLC               |
-| SNAP                        | Link        | mechanism for multiplexing, on networks using IEEE 802.2 LLC               |
-| IPv4                        | Network     | Internet Protocol version 4               |
-| IPv6                        | Network     | Internet Protocol version 6              |
-| IPv6HopByHop                | Network     | IPv6 Hop-by-Hop Header               |
-| IGMP                        | Network     | Internet Group Management Protocol               |
-| ICMPv4                      | Network     | Internet Control Message Protocol v4               |
-| ICMPv6                      | Network     | Internet Control Message Protocol v6               |
-| ICMPv6NeighborAdvertisement | Network     | Neighbor Discovery Protocol               |
-| ICMPv6RouterAdvertisement   | Network     | Neighbor Discovery Protocol               |
-| ICMPv6Echo                  | Network     | Neighbor Discovery Protocol               |
-| ICMPv6NeighborSolicitation  | Network     | Neighbor Discovery Protocol               |
-| ICMPv6RouterSolicitation    | Network     | Neighbor Discovery Protocol               |
-| UDP                         | Transport   | User Datagram Protocol               |
-| TCP                         | Transport   | Transmission Control Protocol               |
-| SCTP                        | Transport   | Stream Control Transmission Protocol               |
-| DNS                         | Application | Domain Name System               |
-| DHCPv4                      | Application | Dynamic Host Configuration version 4               |
-| DHCPv6                      | Application | Dynamic Host Configuration version 6               |
-| NTP                         | Application | Network Time Protocol               |
-| SIP                         | Application | Session Initiation Protocol               |
-| HTTP                        | Application | Hypertext Transfer Protocol              |
-
-## Protocol Sub Structure Types
-
-| Name                        | Description               |
-| --------------------------- | ------------------------- |
-| Dot11QOS                    | IEEE 802.11 Quality Of Service              |
-| Dot11HTControl              | IEEE 802.11 HTC information              |
-| Dot11HTControlVHT           | IEEE 802.11 HTC information              |
-| Dot11HTControlHT            | IEEE 802.11 HTC information              |
-| Dot11HTControlMFB           | IEEE 802.11 HTC information              |
-| Dot11LinkAdapationControl   | IEEE 802.11 HTC information              |
-| Dot11ASEL                   | IEEE 802.11 HTC information              |
-| LLDPChassisID               | Link Layer Discovery Protocol information              |
-| LLDPPortID                  | Link Layer Discovery Protocol information              |
-| LinkLayerDiscoveryValue     | Link Layer Discovery Protocol information              |
-| LLDPSysCapabilities         | Link Layer Discovery Protocol information              |
-| LLDPCapabilities            | Link Layer Discovery Protocol information              |
-| LLDPMgmtAddress             | Link Layer Discovery Protocol information              |
-| LLDPOrgSpecificTLV          | Link Layer Discovery Protocol information              |
-| IPv4Option                  | IPv4 option              |
-| ICMPv6Option                | ICMPv6 option              |
-| TCPOption                   | TCP option              |
-| DNSResourceRecord           | Domain Name System resource record              |
-| DNSSOA                      | Domain Name System start of authority record              |
-| DNSSRV                      | Domain Name System service record              |
-| DNSMX                       | Mail exchange record              |
-| DNSQuestion                 | Domain Name System request for a single domain              |
-| DHCPOption                  | DHCP v4 option              |
-| DHCPv6Option                | DHCP v6 option              |
-| IGMPv3GroupRecord           | IGMPv3 group records for a membership report              |
-| IPv6HopByHopOption          | IPv6 hop by hop extension TLV option              |
-| IPv6HopByHopOptionAlignment | Hop By Hop Option Alignment             |
-
-
-## Available Fields
+## Supported Protocols and Available Fields
 
 ### Layer Encoders
 
@@ -302,6 +235,28 @@ To execute the unit tests, run the following from the project root:
 | EthernetCTP                   |  2        | Timestamp, SkipCount             |
 | EthernetCTPReply              |  4        | Timestamp, Function, ReceiptNumber, Data             |
 | LinkLayerDiscoveryInfo        |  8        | Timestamp, PortDescription, SysName, SysDescription, SysCapabilities, MgmtAddress, OrgTLVs, Unknown             |
+| IPSecAH                       | 5  | Timestamp, Reserved, SPI, Seq, AuthenticationData |
+| IPSecESP                      | 4  | Timestamp, SPI, Seq, LenEncrypted |
+| Geneve                        | 8  | Timestamp, Version, OptionsLength, OAMPacket, CriticalOption, Protocol, VNI, Options |
+| IPv6Fragment                  | 7  | Timestamp, NextHeader, Reserved1, FragmentOffset, Reserved2, MoreFragments, Identification |
+| VXLAN                         | 7  | Timestamp, ValidIDFlag, VNI, GBPExtension, GBPDontLearn, GBPApplied, GBPGroupPolicyID |
+| USB                           | 20 |  Timestamp, ID, EventType, TransferType, Direction, EndpointNumber, DeviceAddress, BusID, TimestampSec, TimestampUsec, Setup, Data, Status,  UrbLength, UrbDataLength, UrbInterval, UrbStartFrame, UrbCopyOfTransferFlags, IsoNumDesc, Payload |
+| LCM                            | 9  | Timestamp, Magic, SequenceNumber, PayloadSize, FragmentOffset, FragmentNumber, TotalFragments, ChannelName, Fragmented |
+| MPLS                           | 5  | Timestamp, Label, TrafficClass, StackBottom, TTL |
+| ModbusTCP                      | 5  | Timestamp, TransactionIdentifier, ProtocolIdentifier, Length, UnitIdentifier |
+| OSPFv2                           | 14  | Timestamp, Version, Type, PacketLength, RouterID, AreaID, Checksum, AuType, Authentication, LSAs, LSU, LSR, DbDesc, HelloV2 |
+| OSPFv3                           | 14  | Timestamp, Version, Type, PacketLength, RouterID, AreaID, Checksum, Instance, Reserved, Hello, DbDesc, LSR, LSU, LSAs |
+| BFD                            | 17  | Timestamp, Version, Diagnostic, State, Poll, Final, ControlPlaneIndependent, AuthPresent, Demand, Multipoint, DetectMultiplier, MyDiscriminator, YourDiscriminator, DesiredMinTxInterval, RequiredMinRxInterval, RequiredMinEchoRxInterval, AuthHeader |
+| GRE                            | 17  | Timestamp, ChecksumPresent, RoutingPresent, KeyPresent, SeqPresent, StrictSourceRoute, AckPresent, RecursionControl, Flags, Version, Protocol, Checksum, Offset, Key, Seq, Ack, Routing |
+| FDDI                           | 5  | Timestamp, FrameControl, Priority, SrcMAC, DstMAC |
+| EAP                            | 6  | Timestamp, Code, Id, Length, Type, TypeData |
+| VRRP                           | 10  | Timestamp, Version, Type, VirtualRtrID, Priority, CountIPAddr, AuthType, AdverInt, Checksum, IPAdresses |
+| EAPOL                          | 4  | Timestamp, Version, Type, Length |
+| EAPOLKey                       | 22  | Timestamp, KeyDescriptorType, KeyDescriptorVersion, KeyType, KeyIndex, Install, KeyACK, KeyMIC, Secure, MICError, Request, HasEncryptedKeyData, SMKMessage, KeyLength, ReplayCounter, Nonce, IV, RSC, ID, MIC, KeyDataLength, EncryptedKeyData |
+| CiscoDiscovery                 | 5  | Timestamp, Version, TTL, Checksum, Values |
+| CiscoDiscoveryInfo             | 27  | Timestamp, CDPHello, DeviceID, Addresses, PortID, Capabilities, Version, Platform, IPPrefixes, VTPDomain, NativeVLAN, FullDuplex, VLANReply, VLANQuery, PowerConsumption, MTU, ExtendedTrust, UntrustedCOS, SysName, SysOID, MgmtAddresses, Location, PowerRequest, PowerAvailable, SparePairPoe, EnergyWise, Unknown |
+| USBRequestBlockSetup           | 6  | Timestamp, RequestType, Request, Value, Index, Length |
+| NortelDiscovery               | 7 | Timestamp, IPAddress, SegmentID, Chassis, Backplane, State, NumLinks |
 
 ### Custom Encoders
 
@@ -774,3 +729,21 @@ Get in touch! :)
 ## License
 
 Netcap is licensed under the GNU General Public License v3, which is a very permissive open source license, that allows others to do almost anything they want with the project, except to distribute closed source versions. This license type was chosen with Netcaps research purpose in mind, and in the hope that it leads to further improvements and new capabilities contributed by other researchers on the long term.
+
+## Source Code Stats
+
+generated with cloc version 1.80
+
+> cloc --exclude-ext pb.go,py,rb cmd sensor server label types utils collector encoder netcap.go reader.go utils.go
+
+        175 text files.
+        175 unique files.
+        3 files ignored.
+
+    github.com/AlDanial/cloc v 1.80  T=0.12 s (1412.6 files/s, 130948.3 lines/s)
+    -------------------------------------------------------------------------------
+    Language                     files          blank        comment           code
+    -------------------------------------------------------------------------------
+    Go                             172           1963           3119          10862
+    -------------------------------------------------------------------------------
+    SUM:                           172           1963           3119          10862

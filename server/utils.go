@@ -24,7 +24,7 @@ import (
 	"github.com/dreadl0ck/netcap"
 	"github.com/dreadl0ck/netcap/encoder"
 	"github.com/dreadl0ck/netcap/types"
-	"github.com/google/kythe/kythe/go/platform/delimited"
+	"kythe.io/kythe/go/platform/delimited"
 )
 
 // AuditRecordHandle wraps a file handle of a netcap audit record file
@@ -49,8 +49,9 @@ func NewAuditRecordHandle(b *types.Batch, path string) *AuditRecordHandle {
 	fmt.Println("new audit record handle", path)
 
 	conf := encoder.Config{
-		Source:  b.ClientID,
-		Version: netcap.Version,
+		Source:          b.ClientID,
+		Version:         netcap.Version,
+		IncludePayloads: b.ContainsPayloads,
 	}
 
 	var (

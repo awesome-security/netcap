@@ -15,12 +15,9 @@ package main
 
 import (
 	"flag"
-
-	"github.com/sirupsen/logrus"
 )
 
 var (
-	Log   = logrus.New()
 	count int64
 
 	flagBPF          = flag.String("bpf", "", "supply a BPF filter to use prior to processing packets with netcap")
@@ -58,4 +55,8 @@ var (
 	flagPromiscMode           = flag.Bool("promisc", true, "toggle promiscous mode for live capture")
 	flagSnapLen               = flag.Int("snaplen", 1024, "configure snaplen for live capture from interface")
 	flagPrintProtocolOverview = flag.Bool("overview", false, "print a list of all available encoders and fields")
+
+	flagBaseLayer     = flag.String("base", "ethernet", "select base layer")
+	flagDecodeOptions = flag.String("opts", "lazy", "select decoding options")
+	flagPayload       = flag.Bool("payload", false, "capture payload for supported layers")
 )

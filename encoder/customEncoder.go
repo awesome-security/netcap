@@ -25,7 +25,7 @@ import (
 	"github.com/dreadl0ck/netcap/types"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/gopacket"
-	"github.com/google/kythe/kythe/go/platform/delimited"
+	"kythe.io/kythe/go/platform/delimited"
 )
 
 var (
@@ -83,6 +83,10 @@ func init() {
 	for _, e := range customEncoderSlice {
 		allEncoderNames[e.Name] = struct{}{}
 	}
+	// collect all names for custom encoders on startup
+	for _, e := range layerEncoderSlice {
+		allEncoderNames[e.Layer.String()] = struct{}{}
+	}
 }
 
 // InitCustomEncoders initializes all custom encoders
@@ -109,7 +113,7 @@ func InitCustomEncoders(c Config) {
 
 				// check if proto exists
 				if _, ok := allEncoderNames[name]; !ok {
-					invalidProto(name)
+					invalidEncoder(name)
 				}
 
 				// add to include map
@@ -134,7 +138,7 @@ func InitCustomEncoders(c Config) {
 
 			// check if proto exists
 			if _, ok := allEncoderNames[name]; !ok {
-				invalidProto(name)
+				invalidEncoder(name)
 			}
 
 			// remove named encoder from customEncoderSlice

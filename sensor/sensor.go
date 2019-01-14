@@ -28,6 +28,7 @@ import (
 	"github.com/dreadl0ck/netcap/collector"
 	"github.com/dreadl0ck/netcap/encoder"
 	"github.com/dreadl0ck/netcap/types"
+	"github.com/dreadl0ck/netcap/utils"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -45,8 +46,11 @@ var (
 	flagPromiscMode  = flag.Bool("promisc", true, "capture live in promisc mode")
 	flagSnapLen      = flag.Int("snaplen", 1024, "configure snaplen for live capture")
 
-	flagServerPubKey = flag.String("pubkey", "", "path to the hex encoded server public key on disk")
-	flagAddr         = flag.String("addr", "127.0.0.1:1335", "specify the address and port of the collection server")
+	flagServerPubKey  = flag.String("pubkey", "", "path to the hex encoded server public key on disk")
+	flagAddr          = flag.String("addr", "127.0.0.1:1335", "specify the address and port of the collection server")
+	flagBaseLayer     = flag.String("base", "ethernet", "select base layer")
+	flagDecodeOptions = flag.String("opts", "lazy", "select decoding options")
+	flagPayload       = flag.Bool("payload", false, "capture payload for supported layers")
 )
 
 func main() {
@@ -104,12 +108,18 @@ func main() {
 			Source:          *flagInterface,
 
 			// set channel writer
-			WriteChan: true,
+			WriteChan:       true,
+			IncludePayloads: *flagPayload,
 		},
+		BaseLayer:     utils.GetBaseLayer(*flagBaseLayer),
+		DecodeOptions: utils.GetDecodeOptions(*flagDecodeOptions),
 	})
 
 	// initialize batching
-	chans, handle := c.InitBatching(*flagMaxSize, *flagBPF, *flagInterface)
+	chans, handle, err := c.InitBatching(*flagMaxSize, *flagBPF, *flagInterface)
+	if err != nil {
+		panic(err)
+	}
 
 	// close handle on exit
 	defer handle.Close()

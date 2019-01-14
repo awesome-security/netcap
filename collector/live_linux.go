@@ -17,24 +17,20 @@ package collector
 
 import (
 	"io"
-	"log"
-
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
 
 	"github.com/dreadl0ck/netcap/encoder"
-	"github.com/google/gopacket"
+	"github.com/google/gopacket/pcapgo"
+	"github.com/pkg/errors"
 )
 
-// CollectLive starts collection of data from the given interface
-// optionally a BPF can be supplied
-// this is the linux version that uses the pure go version from pcapgo to fetch packets live
-func (c *Collector) CollectLive(i string, bpf string) {
-
+// CollectLive starts collection of data from the given interface.
+// optionally a BPF can be supplied.
+// this is the linux version that uses the pure go version from pcapgo to fetch packets live.
+func (c *Collector) CollectLive(i string, bpf string) error {
 	// use raw socket to fetch packet on linux live mode
 	handle, err := pcapgo.NewEthernetHandle(i)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer handle.Close()
 
@@ -42,19 +38,19 @@ func (c *Collector) CollectLive(i string, bpf string) {
 	if bpf != "" {
 		rb, err := rawBPF(bpf)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		err = handle.SetBPF(rb)
-		if err != nil {
-			panic(err)
+		if err := handle.SetBPF(rb); err != nil {
+			return err
 		}
 	}
 
 	// initialize collector
-	c.Init()
+	if err := c.Init(); err != nil {
+		return err
+	}
 
 	encoder.LiveMode = true
-	print("decoding packets... ")
 
 	// read packets from channel
 	for {
@@ -65,28 +61,13 @@ func (c *Collector) CollectLive(i string, bpf string) {
 			if err == io.EOF {
 				break
 			}
-			log.Fatal("Error reading packet data: ", err)
+			return errors.Wrap(err, "Error reading packet data")
 		}
 
-		c.printProgressLive()
-
-		// init packet and set capture info and timestamp
-		p := gopacket.NewPacket(data, layers.LayerTypeEthernet, gopacket.Lazy)
-		p.Metadata().Timestamp = ci.Timestamp
-		p.Metadata().CaptureInfo = ci
-
-		// if HTTP capture is desired, tcp stream reassembly needs to be performed.
-		// the gopacket/reassembly implementation does not allow packets to arrive out of order
-		// therefore the http decoding must not happen in a worker thread
-		// and instead be performed here to guarantee packets are being processed sequentially
-		if encoder.HTTPActive {
-			encoder.DecodeHTTP(p)
-		}
-
-		// pass packet to worker for decoding and further processing
-		c.handlePacket(p)
+		c.handleRawPacketData(data, ci)
 	}
 
 	// run cleanup on channel exit
 	c.cleanup()
+	return nil
 }

@@ -14,21 +14,23 @@
 package encoder
 
 import (
-	"time"
-
 	"github.com/dreadl0ck/netcap/types"
-	"github.com/dreadl0ck/netcap/utils"
+	"github.com/golang/protobuf/proto"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
-func NewHeader(t types.Type, c Config) *types.Header {
-
-	// init header
-	header := new(types.Header)
-	header.Type = t
-	header.Created = utils.TimeToString(time.Now())
-	header.InputSource = c.Source
-	header.Version = c.Version
-	header.ContainsPayloads = c.IncludePayloads
-
-	return header
-}
+var nortelDiscoveryEncoder = CreateLayerEncoder(types.Type_NC_NortelDiscovery, layers.LayerTypeNortelDiscovery, func(layer gopacket.Layer, timestamp string) proto.Message {
+	if nortel, ok := layer.(*layers.NortelDiscovery); ok {
+		return &types.NortelDiscovery{
+			Timestamp: timestamp,
+			IPAddress: string(nortel.IPAddress),
+			SegmentID: []byte(nortel.SegmentID),
+			Chassis:   int32(nortel.Chassis),
+			Backplane: int32(nortel.Backplane),
+			State:     int32(nortel.State),
+			NumLinks:  int32(nortel.NumLinks),
+		}
+	}
+	return nil
+})

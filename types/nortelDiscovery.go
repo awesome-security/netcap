@@ -13,36 +13,32 @@
 
 package types
 
-func (a VRRPv2) CSVHeader() []string {
+import "encoding/hex"
+
+func (a NortelDiscovery) CSVHeader() []string {
 	return filter([]string{
 		"Timestamp",
-		"Version",      // int32
-		"Type",         // int32
-		"VirtualRtrID", // int32
-		"Priority",     // int32
-		"CountIPAddr",  // int32
-		"AuthType",     // int32
-		"AdverInt",     // int32
-		"Checksum",     // int32
-		"IPAdresses",   // []string
+		"IPAddress", // string
+		"SegmentID", // []byte
+		"Chassis",   // int32
+		"Backplane", // int32
+		"State",     // int32
+		"NumLinks",  // int32
 	})
 }
 
-func (a VRRPv2) CSVRecord() []string {
+func (a NortelDiscovery) CSVRecord() []string {
 	return filter([]string{
 		formatTimestamp(a.Timestamp),
-		formatInt32(a.Version),      // int32
-		formatInt32(a.Type),         // int32
-		formatInt32(a.VirtualRtrID), // int32
-		formatInt32(a.Priority),     // int32
-		formatInt32(a.CountIPAddr),  // int32
-		formatInt32(a.AuthType),     // int32
-		formatInt32(a.AdverInt),     // int32
-		formatInt32(a.Checksum),     // int32
-		join(a.IPAddress...),        // []string
+		a.IPAddress,                     // string
+		hex.EncodeToString(a.SegmentID), // []byte
+		formatInt32(a.Chassis),          // int32
+		formatInt32(a.Backplane),        // int32
+		formatInt32(a.State),            // int32
+		formatInt32(a.NumLinks),         // int32
 	})
 }
 
-func (a VRRPv2) NetcapTimestamp() string {
+func (a NortelDiscovery) NetcapTimestamp() string {
 	return a.Timestamp
 }

@@ -14,21 +14,22 @@
 package encoder
 
 import (
-	"time"
-
 	"github.com/dreadl0ck/netcap/types"
-	"github.com/dreadl0ck/netcap/utils"
+	"github.com/golang/protobuf/proto"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
-func NewHeader(t types.Type, c Config) *types.Header {
-
-	// init header
-	header := new(types.Header)
-	header.Type = t
-	header.Created = utils.TimeToString(time.Now())
-	header.InputSource = c.Source
-	header.Version = c.Version
-	header.ContainsPayloads = c.IncludePayloads
-
-	return header
-}
+var usbRequestBlockSetupEncoder = CreateLayerEncoder(types.Type_NC_USBRequestBlockSetup, layers.LayerTypeUSBRequestBlockSetup, func(layer gopacket.Layer, timestamp string) proto.Message {
+	if usbR, ok := layer.(*layers.USBRequestBlockSetup); ok {
+		return &types.USBRequestBlockSetup{
+			Timestamp:   timestamp,
+			RequestType: int32(usbR.RequestType),
+			Request:     int32(usbR.Request),
+			Value:       int32(usbR.Value),
+			Index:       int32(usbR.Index),
+			Length:      int32(usbR.Length),
+		}
+	}
+	return nil
+})

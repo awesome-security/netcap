@@ -109,6 +109,7 @@ func main() {
 			{"Source", h.InputSource},
 			{"Version", h.Version},
 			{"Type", h.Type.String()},
+			{"ContainsPayloads", strconv.FormatBool(h.ContainsPayloads)},
 		})
 		os.Exit(0) // bye bye
 	}
@@ -139,7 +140,10 @@ func main() {
 			Out:             *flagOutDir,
 			Source:          source,
 			Version:         netcap.Version,
+			IncludePayloads: *flagPayload,
 		},
+		BaseLayer:     utils.GetBaseLayer(*flagBaseLayer),
+		DecodeOptions: utils.GetDecodeOptions(*flagDecodeOptions),
 	})
 
 	// read ncap file and print to stdout
@@ -161,7 +165,10 @@ func main() {
 
 	// collect traffic live from named interface
 	if live {
-		c.CollectLive(*flagInterface, *flagBPF)
+		err := c.CollectLive(*flagInterface, *flagBPF)
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -171,7 +178,9 @@ func main() {
 	// in case a BPF should be set, the gopacket/pcap version with libpcap bindings needs to be used
 	// setting BPF filters is not yet supported by the pcapgo package
 	if *flagBPF != "" {
-		c.CollectBPF(*flagInput, *flagBPF)
+		if err := c.CollectBPF(*flagInput, *flagBPF); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 

@@ -130,6 +130,8 @@ enum Type {
     NC_EAPOLKey                    = 82;              
     NC_CiscoDiscovery              = 83;
     NC_CiscoDiscoveryInfo          = 84;
+    NC_USBRequestBlockSetup        = 85;
+    NC_NortelDiscovery             = 86;
 }
 
 /*
@@ -139,10 +141,11 @@ enum Type {
  */
 
 message Header {
-    string Created     = 1; // Timestamp of creation date
-    string InputSource = 2; // interface name or name of dumpfile
-    Type   Type        = 3; // netcap data type
-    string Version     = 4; // Netcap version string
+    string Created          = 1; // Timestamp of creation date
+    string InputSource      = 2; // interface name or name of dumpfile
+    Type   Type             = 3; // netcap data type
+    string Version          = 4; // Netcap version string
+    bool   ContainsPayloads = 5; 
 }
 
 
@@ -152,10 +155,11 @@ message Header {
  */
 
 message Batch {
-    string ClientID    = 1; // unique client identifier
-    Type   MessageType = 2; // netcap data type
-    int32  Size        = 3; // data size in bytes
-    bytes  Data        = 4; // actual data, (serialized protocol buffers)
+    string ClientID         = 1; // unique client identifier
+    Type   MessageType      = 2; // netcap data type
+    int32  Size             = 3; // data size in bytes
+    bytes  Data             = 4; // actual data, (serialized protocol buffers)
+    bool   ContainsPayloads = 5;
 }
 
 /*
@@ -546,6 +550,7 @@ message UDP {
     int32  Checksum       = 5;
     double PayloadEntropy = 6;
     int32  PayloadSize    = 7;
+    bytes  Payload        = 8;
 }
 
 message TCP {
@@ -572,6 +577,7 @@ message TCP {
     repeated TCPOption Options = 20;
     double   PayloadEntropy    = 21;
     int32    PayloadSize       = 22;
+    bytes    Payload           = 23;
 }
 
 message TCPOption {
@@ -947,6 +953,16 @@ message USB {
     uint32      UrbStartFrame             = 17;
     uint32      UrbCopyOfTransferFlags    = 18;
     uint32      IsoNumDesc                = 19;
+    bytes       Payload                   = 20;
+}
+
+message USBRequestBlockSetup {
+    string Timestamp   = 1; 
+    int32  RequestType = 2;
+    int32  Request     = 3;
+    int32  Value       = 4;
+    int32  Index       = 5;
+    int32  Length      = 6;
 }
 
 // LCM (Lightweight Communications and Marshalling) is a set of libraries and tools for message passing and data marshalling, 
@@ -994,7 +1010,44 @@ message OSPFv2 {
     int32     Checksum      = 7;
     int32     AuType        = 8; 
     int64     Authentication = 9;
+    
     // interface Content
+    repeated LSAheader    LSAs    = 10;
+    LSUpdate              LSU     = 11;
+    repeated LSReq        LSR     = 12;
+    DbDescPkg             DbDesc  = 13;
+    HelloPkgV2            HelloV2 = 14;
+}
+
+message HelloPkg {
+    uint32            InterfaceID               = 1;
+    int32             RtrPriority               = 2;
+    uint32            Options                   = 3;
+    int32             HelloInterval             = 4;
+    uint32            RouterDeadInterval        = 5;
+    uint32            DesignatedRouterID        = 6;
+    uint32            BackupDesignatedRouterID  = 7;
+    repeated uint32   NeighborID                = 8;
+}
+
+message HelloPkgV2 {
+    uint32           InterfaceID               = 1;
+    int32            RtrPriority               = 2;
+    uint32           Options                   = 3;
+    int32            HelloInterval             = 4;
+    uint32           RouterDeadInterval        = 5;
+    uint32           DesignatedRouterID        = 6;
+    uint32           BackupDesignatedRouterID  = 7;
+    repeated uint32  NeighborID                = 8;
+    uint32           NetworkMask               = 9;
+}
+
+message DbDescPkg {
+    uint32               Options        = 1;     
+    int32                InterfaceMTU   = 2;
+    int32                Flags          = 3;
+    uint32               DDSeqNumber    = 4;
+    repeated LSAheader   LSAinfo        = 5;        
 }
 
 message OSPFv3 {
@@ -1007,7 +1060,139 @@ message OSPFv3 {
     int32     Checksum      = 7;
     int32     Instance      = 8;
     int32     Reserved      = 9;
+    
     // interface Content
+    HelloPkg              Hello     = 10;
+    DbDescPkg             DbDesc    = 11;
+    repeated LSReq        LSR       = 12;
+    LSUpdate              LSU       = 13;
+    repeated LSAheader    LSAs      = 14;
+}
+
+message LSAheader {
+    int32   LSAge       = 1;
+    int32   LSType      = 2;
+    uint32  LinkStateID = 3;
+    uint32  AdvRouter   = 4;
+    uint32  LSSeqNumber = 5;
+    int32   LSChecksum  = 6;
+    int32   Length      = 7;
+    int32   LSOptions   = 8;
+}
+
+message LSA {
+    
+    LSAheader Header = 1;
+
+    // interface Content
+    RouterLSAV2          RLSAV2           = 2;
+    ASExternalLSAV2      ASELSAV2         = 3;
+    RouterLSA            RLSA             = 4;
+    NetworkLSA           NLSA             = 5;
+    InterAreaPrefixLSA   InterAPrefixLSA  = 6;
+    InterAreaRouterLSA   IARouterLSA      = 7;
+    ASExternalLSA        ASELSA           = 8;
+    LinkLSA              LLSA             = 9;
+    IntraAreaPrefixLSA   IntraAPrefixLSA  = 10;
+}
+
+message LSReq {
+    int32   LSType       = 1;    
+    uint32  LSID         = 2;      
+    uint32  AdvRouter    = 3; 
+}
+
+message LSUpdate {
+    uint32         NumOfLSAs  = 1;
+    repeated LSA   LSAs       = 2;
+}
+
+message IntraAreaPrefixLSA {
+    int32               NumOfPrefixes   = 1;
+    int32               RefLSType       = 2;
+    uint32              RefLinkStateID  = 3;
+    uint32              RefAdvRouter    = 4;
+    repeated LSAPrefix  Prefixes        = 5;
+}
+
+message ASExternalLSA {
+    int32    Flags             = 1;
+    uint32   Metric            = 2;
+    int32    PrefixLength      = 3;
+    int32    PrefixOptions     = 4;
+    int32    RefLSType         = 5;
+    bytes    AddressPrefix     = 6;
+    bytes    ForwardingAddress = 7;
+    uint32   ExternalRouteTag  = 8;
+    uint32   RefLinkStateID    = 9;
+}
+
+message InterAreaPrefixLSA {
+    uint32   Metric          = 1;
+    int32    PrefixLength    = 2;
+    int32    PrefixOptions   = 3;
+    bytes    AddressPrefix   = 4;
+}
+
+message InterAreaRouterLSA {
+    uint32   Options              = 1;
+    uint32   Metric               = 2;
+    uint32   DestinationRouterID  = 3;
+}
+
+message ASExternalLSAV2 {
+    uint32   NetworkMask        = 1;
+    int32    ExternalBit        = 2;
+    uint32   Metric             = 3;
+    uint32   ForwardingAddress  = 4;
+    uint32   ExternalRouteTag   = 5;
+}
+
+message RouterLSA {
+    int32             Flags   = 1;
+    uint32            Options = 2;
+    repeated Router   Routers = 3;
+}
+
+message Router {
+    int32   Type                  = 1;
+    int32   Metric                = 2;
+    uint32  InterfaceID           = 3;
+    uint32  NeighborInterfaceID   = 4;
+    uint32  NeighborRouterID      = 5;
+}
+
+message RouterLSAV2 {
+    int32               Flags   = 1;
+    int32               Links   = 2;
+    repeated RouterV2   Routers = 3;
+}
+
+message RouterV2 {
+    int32    Type      = 1;
+    uint32   LinkID    = 2;
+    uint32   LinkData  = 3;
+    uint32   Metric    = 4;
+}
+
+message NetworkLSA {
+    uint32             Options         = 1;
+    repeated uint32    AttachedRouter  = 2;
+}
+
+message LinkLSA {
+    int32               RtrPriority      = 1;
+    uint32              Options          = 2;
+    bytes               LinkLocalAddress = 3;
+    uint32              NumOfPrefixes    = 4;
+    repeated LSAPrefix  Prefixes         = 5;
+}
+
+message LSAPrefix {
+    int32  PrefixLength  = 1;
+    int32  PrefixOptions = 2;
+    int32  Metric        = 3;
+    bytes  AddressPrefix = 4;
 }
 
 message BFD {
@@ -1246,4 +1431,14 @@ message CDPCapabilities {
 message IPNet {
     string    IP      = 1;     // network number
     string    IPMask  = 2;     // network mask
+}
+
+message NortelDiscovery {
+    string    Timestamp    = 1;
+    string    IPAddress    = 2;
+    bytes     SegmentID    = 3;
+    int32     Chassis      = 4;
+    int32     Backplane    = 5;
+    int32     State        = 6;
+    int32     NumLinks     = 7;
 }

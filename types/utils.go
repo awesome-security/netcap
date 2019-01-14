@@ -14,17 +14,50 @@
 package types
 
 import (
+	"reflect"
 	"strconv"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/dreadl0ck/netcap/utils"
 )
 
 const (
 	begin = "("
 	end   = ")"
-	sep   = "/"
+	sep   = "-"
 )
+
+type Stringable interface {
+	ToString() string
+}
+
+// panic: value method github.com/dreadl0ck/netcap/types.LSUpdate.ToString called using nil *LSUpdate pointer
+// func toString(v Stringable) string {
+// 	if v != nil {
+// 		return v.ToString()
+// 	}
+// 	return ""
+// }
+
+// this function wraps the ToString() function call with a nil pointer check
+func toString(c Stringable) string {
+
+	// make sure its not a nil pointer
+	// a simple nil check is apparently not enough here
+	if c == nil || (reflect.ValueOf(c).Kind() == reflect.Ptr && reflect.ValueOf(c).IsNil()) {
+		return ""
+	}
+
+	// now check if the Stringable interface is implemented
+	if str, ok := c.(Stringable); ok {
+		return str.ToString()
+	}
+
+	// in case the Stringable interface is not implemented: fail
+	spew.Dump(c)
+	panic("toString called with an instance that does not implement the Stringable interface")
+}
 
 func joinInts(a []int32) string {
 	var (
@@ -34,6 +67,22 @@ func joinInts(a []int32) string {
 	b.WriteString(begin)
 	for i, num := range a {
 		b.WriteString(formatInt32(num))
+		if i != lastIndex {
+			b.WriteString(sep)
+		}
+	}
+	b.WriteString(end)
+	return b.String()
+}
+
+func joinUints(a []uint32) string {
+	var (
+		b         strings.Builder
+		lastIndex = len(a) - 1
+	)
+	b.WriteString(begin)
+	for i, num := range a {
+		b.WriteString(formatUint32(num))
 		if i != lastIndex {
 			b.WriteString(sep)
 		}
